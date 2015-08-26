@@ -182,6 +182,8 @@ namespace Neovim
             _process.Dispose();
             _process = null;
             _executing = false;
+
+            Environment.Exit(0);
         }
 
 

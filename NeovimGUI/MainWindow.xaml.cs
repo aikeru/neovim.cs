@@ -14,6 +14,8 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using MsgPack;
 using Neovim;
+using System.Configuration;
+using System.IO;
 
 namespace NeovimGUI
 {
@@ -35,12 +37,30 @@ namespace NeovimGUI
         private RenderProperties _renderProperties;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            _neovim = new NeovimClient(@"C:\Program Files\Neovim\nvim.exe");
-            _neovim.Redraw += OnRedraw;
-            _neovim.ui_attach(80, 24, true);
+            try
+            {
+                if(File.Exists(ConfigurationManager.AppSettings["neovim_path"]))
+                {
+                    _neovim = new NeovimClient(ConfigurationManager.AppSettings["neovim_path"]);
+                    _neovim.Redraw += OnRedraw;
+                    _neovim.ui_attach(80, 24, true);
 
-            this.KeyDown += term_KeyDown;
-            Grid.SizeChanged += Window_SizeChanged;
+                    this.KeyDown += term_KeyDown;
+                    Grid.SizeChanged += Window_SizeChanged;
+                }
+                else
+                {
+                    MessageBox.Show("Couldn't find the neovim executable at location [" +
+                        ConfigurationManager.AppSettings["neovim_path"] +
+                        "]\r\nIt may be missing, inaccessible or you may need to change Neovim.cs XML configuration.");
+                    Environment.Exit(1);
+                }
+            } 
+            catch(Exception ex)
+            {
+                MessageBox.Show("There was an error starting the NeovimClient.\r\n" + ex.ToString());
+                Environment.Exit(1);
+            }
         }
 
         private delegate void UpdateTerminalWindowDelegate(Action<TerminalTst> message);
