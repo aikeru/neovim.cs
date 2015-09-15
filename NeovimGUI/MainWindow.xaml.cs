@@ -16,6 +16,7 @@ using MsgPack;
 using Neovim;
 using System.Configuration;
 using System.IO;
+using NeovimTerminal;
 
 namespace NeovimGUI
 {
@@ -34,7 +35,6 @@ namespace NeovimGUI
         }
 
         private NeovimClient _neovim;
-        private RenderProperties _renderProperties;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             try
@@ -166,7 +166,7 @@ namespace NeovimGUI
                         break;
 
                     case "normal_mode":
-                        UpdateTerminal((t) => t.Caret.Width = t._cellWidth);
+                        UpdateTerminal((t) => t.Caret.Width = t.CellWidth);
                         break;
 
                     case "insert_mode":
@@ -204,11 +204,23 @@ namespace NeovimGUI
 
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            //int rows = (int)Math.Round(e.NewSize.Height / _term.Cell.Height);
-            //int columns = (int) Math.Round(e.NewSize.Width/_term.Cell.Width);
+            int rows = (int)Math.Round(e.NewSize.Height / _term.CellHeight);
+            int columns = (int) Math.Round(e.NewSize.Width/_term.CellWidth);
 
-            //if (_term.Cells.Count != rows && _term.Cells[0].Count != columns)
-            //    _neovim.ui_try_resize(columns, rows);
+            _term.Resize(rows, columns);
+//                _neovim.ui_try_resize(columns, rows);
+        }
+
+        private void QuitMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            //TODO: this blocks the main thread and seems to hang when changes are unsaved :(
+            //_neovim.vim_command(":qa");
+            _neovim.vim_command(":qa!");
+        }
+
+        private void SaveMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            _neovim.vim_command(":w");
         }
     }
 }

@@ -17,13 +17,12 @@ using Image = System.Windows.Controls.Image;
 using Point = System.Windows.Point;
 using Size = System.Windows.Size;
 
-namespace NeovimGUI
+namespace NeovimTerminal
 {
-    class TerminalTst : Image
+    public class TerminalTst : Image
     {
         private Bitmap bmp;
-        private Bitmap _caret;
-        private Bitmap final;
+        //private Bitmap _caret;
 
         private Graphics g;
         public Rectangle Caret;
@@ -31,35 +30,35 @@ namespace NeovimGUI
         public Color Foreground { get; set; }
         public Font Font { get; set; }
 
-        public int _cellWidth = 12;
-        private int _cellHeight = 16;
-        private int rows = 25;
-        private int columns = 80;
+        public int CellWidth = 12;
+        public int CellHeight = 16;
+
+        private int _Rows;
+        private int _Columns;
+
         public TerminalTst()
         {
             Font = new Font(new FontFamily("Arial"), 12);
-            _cellWidth = 12;
-            _cellHeight = 16;
+            CellWidth = 12;
+            CellHeight = 16;
 
             Caret = new Rectangle();
-            Caret.Width = _cellWidth;
-            Caret.Height = _cellHeight;
-            bmp = new Bitmap(80*_cellWidth, 24*_cellHeight);
-
-
-            g = Graphics.FromImage(bmp);
+            Caret.Width = CellWidth;
+            Caret.Height = CellHeight;
 
             Background = Color.DarkSlateGray;
             Foreground = Color.White;
 
-            Width = _cellWidth*columns;
-            Height = _cellHeight*rows;
+            Resize(25, 80);
         }
 
         public void SwapBuffers()
         {
-            final = new Bitmap(bmp);
-            var f = Graphics.FromImage(final);
+            //TODO: this will cause an outofmemory exception
+            //      need to draw bitmaps and such
+            var finalBmp = new Bitmap(bmp);
+            //final = final == null ? new Bitmap(bmp) : final;
+            var f = Graphics.FromImage(finalBmp);
 
             var attrs = new ImageAttributes();
             ColorMatrix m = new ColorMatrix(new float[][]
@@ -72,28 +71,34 @@ namespace NeovimGUI
             }); 
             attrs.SetColorMatrix(m);
 
-            f.DrawImage(final, new Rectangle((int)Caret.X, (int)Caret.Y, _cellWidth, _cellHeight), Caret.X, Caret.Y, (float)_cellWidth, (float)_cellHeight, GraphicsUnit.Pixel, attrs);
+            f.DrawImage(finalBmp, new Rectangle((int)Caret.X, (int)Caret.Y, CellWidth, CellHeight), Caret.X, Caret.Y, (float)CellWidth, (float)CellHeight, GraphicsUnit.Pixel, attrs);
 
             f.Dispose();
 
-            ImageSource src = Imaging.CreateBitmapSourceFromHBitmap(final.GetHbitmap(), IntPtr.Zero, Int32Rect.Empty,
+            var pointer = finalBmp.GetHbitmap();
+            ImageSource src = Imaging.CreateBitmapSourceFromHBitmap(pointer, IntPtr.Zero, Int32Rect.Empty,
                 BitmapSizeOptions.FromEmptyOptions());
             this.Source = src;
+
+            finalBmp.Dispose();
+            finalBmp = null;
         }
 
         public void MoveCaret(int row, int col)
         {
-            Caret.X = col*_cellWidth;
-            Caret.Y = row*_cellHeight;
+            Caret.X = col*CellWidth;
+            Caret.Y = row*CellHeight;
         }
 
         public void PutText(string text)
         {
+            var font = new Font(new System.Drawing.FontFamily("Arial"), 8);
+            var brush = new SolidBrush(Foreground);
             for (int i = 0; i < text.Length; i++)
             {
-                g.FillRectangle(new SolidBrush(Background), Caret.X, Caret.Y, _cellWidth, _cellHeight);
-                g.DrawString(text[i].ToString(), new Font(new System.Drawing.FontFamily("Arial"), 8), new SolidBrush(Foreground), Caret.X, Caret.Y);
-                Caret.X += _cellWidth;
+                g.FillRectangle(new SolidBrush(Background), Caret.X, Caret.Y, CellWidth, CellHeight);
+                g.DrawString(text[i].ToString(), font, brush, Caret.X, Caret.Y);
+                Caret.X += CellWidth;
             }
         }
 
@@ -101,14 +106,14 @@ namespace NeovimGUI
         {
             if (direction == -1)
             {
-                g.DrawImage(bmp, 0, _cellHeight);
-                g.FillRectangle(new SolidBrush(Background), Caret.X, Caret.Y, (float)this.Width, _cellHeight);
+                g.DrawImage(bmp, 0, CellHeight);
+                g.FillRectangle(new SolidBrush(Background), Caret.X, Caret.Y, (float)this.Width, CellHeight);
             }
 
             else if (direction == 1)
             {
-                g.DrawImage(bmp, 0, -_cellHeight);
-                g.FillRectangle(new SolidBrush(Background), Caret.X, Caret.Y, (float)this.Width, _cellHeight);
+                g.DrawImage(bmp, 0, -CellHeight);
+                g.FillRectangle(new SolidBrush(Background), Caret.X, Caret.Y, (float)this.Width, CellHeight);
             }
         }
 
@@ -119,7 +124,7 @@ namespace NeovimGUI
 
         public void ClearToEnd()
         {
-            g.FillRectangle(new SolidBrush(Background), Caret.X, Caret.Y, (float)this.Width, _cellHeight);
+            g.FillRectangle(new SolidBrush(Background), Caret.X, Caret.Y, (float)this.Width, CellHeight);
         }
 
         public void Highlight(Color foreground, bool bold, bool italic)
@@ -129,7 +134,19 @@ namespace NeovimGUI
 
         public void Resize(int rows, int columns)
         {
-            
+            _Rows = rows;
+            _Columns = columns;
+            if (bmp == null)
+            {
+                bmp = new Bitmap(columns * CellWidth, rows * CellHeight);
+            }
+            else
+            {
+                
+            }
+            g = Graphics.FromImage(bmp);
+            Width = CellWidth*columns;
+            Height = CellHeight*rows;
         }
     }
 }

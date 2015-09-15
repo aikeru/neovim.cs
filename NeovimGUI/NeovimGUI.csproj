@@ -64,8 +64,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Terminal.cs" />
-    <Compile Include="TerminalTst.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -111,6 +109,10 @@
     <ProjectReference Include="..\Neovim-Client\Neovim-Client.csproj">
       <Project>{860c416c-5c1a-43fd-88b3-293a94ca2b14}</Project>
       <Name>Neovim-Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NeovimTerminal\NeovimTerminal.csproj">
+      <Project>{86e04afe-a021-4a61-a885-c282a7d394f4}</Project>
+      <Name>NeovimTerminal</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
