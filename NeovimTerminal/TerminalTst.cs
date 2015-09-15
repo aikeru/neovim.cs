@@ -16,6 +16,7 @@ using FontStyle = System.Drawing.FontStyle;
 using Image = System.Windows.Controls.Image;
 using Point = System.Windows.Point;
 using Size = System.Windows.Size;
+using System.IO;
 
 namespace NeovimTerminal
 {
@@ -23,6 +24,8 @@ namespace NeovimTerminal
     {
         private Bitmap bmp;
         //private Bitmap _caret;
+        private MemoryStream XferStream = new MemoryStream();
+
 
         private Graphics g;
         public Rectangle Caret;
@@ -56,9 +59,19 @@ namespace NeovimTerminal
         {
             //TODO: this will cause an outofmemory exception
             //      need to draw bitmaps and such
-            var finalBmp = new Bitmap(bmp);
+            XferStream.Seek(0, SeekOrigin.Begin);
+
+            bmp.Save(XferStream, ImageFormat.Bmp);
+
+            XferStream.Seek(0, SeekOrigin.Begin);
+
+            var tmpStream = new MemoryStream();
+
+            XferStream.CopyTo(tmpStream);
+
+            var finalBmp = new Bitmap(tmpStream);
             //final = final == null ? new Bitmap(bmp) : final;
-            var f = Graphics.FromImage(finalBmp);
+            var finalGraphics = Graphics.FromImage(finalBmp);
 
             var attrs = new ImageAttributes();
             ColorMatrix m = new ColorMatrix(new float[][]
@@ -68,26 +81,38 @@ namespace NeovimTerminal
                 new float[] {0, 0, -1, 0, 0},
                 new float[] {0, 0, 0, 1, 0},
                 new float[] {1, 1, 1, 0, 1}
-            }); 
+            });
             attrs.SetColorMatrix(m);
 
-            f.DrawImage(finalBmp, new Rectangle((int)Caret.X, (int)Caret.Y, CellWidth, CellHeight), Caret.X, Caret.Y, (float)CellWidth, (float)CellHeight, GraphicsUnit.Pixel, attrs);
+            finalGraphics.DrawImage(finalBmp, new Rectangle((int)Caret.X, (int)Caret.Y, CellWidth, CellHeight), Caret.X, Caret.Y, (float)CellWidth, (float)CellHeight, GraphicsUnit.Pixel, attrs);
 
-            f.Dispose();
+            finalGraphics.Dispose();
 
-            var pointer = finalBmp.GetHbitmap();
-            ImageSource src = Imaging.CreateBitmapSourceFromHBitmap(pointer, IntPtr.Zero, Int32Rect.Empty,
-                BitmapSizeOptions.FromEmptyOptions());
-            this.Source = src;
+            //var pointer = finalBmp.GetHbitmap();
+            //ImageSource src = Imaging.CreateBitmapSourceFromHBitmap(pointer, IntPtr.Zero, Int32Rect.Empty,
+            //    BitmapSizeOptions.FromEmptyOptions());
+            //this.Source = src;
+
+            var finalStream = new MemoryStream();
+            finalBmp.Save(finalStream, ImageFormat.Bmp);
+            finalStream.Seek(0, SeekOrigin.Begin);
+
+            var imageSource = new BitmapImage();
+            imageSource.BeginInit();
+            imageSource.StreamSource = finalStream;
+            imageSource.EndInit();
+            this.Source = imageSource;
 
             finalBmp.Dispose();
             finalBmp = null;
+            tmpStream.Dispose();
+            tmpStream = null;
         }
 
         public void MoveCaret(int row, int col)
         {
-            Caret.X = col*CellWidth;
-            Caret.Y = row*CellHeight;
+            Caret.X = col * CellWidth;
+            Caret.Y = row * CellHeight;
         }
 
         public void PutText(string text)
@@ -142,11 +167,11 @@ namespace NeovimTerminal
             }
             else
             {
-                
+
             }
             g = Graphics.FromImage(bmp);
-            Width = CellWidth*columns;
-            Height = CellHeight*rows;
+            Width = CellWidth * columns;
+            Height = CellHeight * rows;
         }
     }
 }

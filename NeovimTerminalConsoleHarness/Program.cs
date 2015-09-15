@@ -17,7 +17,6 @@ namespace NeovimTerminalConsoleHarness
                 terminalTst.PutText("a");
                 terminalTst.SwapBuffers();
             }
-
             //Console.Read();
         }
     }

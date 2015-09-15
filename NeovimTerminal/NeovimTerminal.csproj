@@ -50,6 +50,7 @@
     <Compile Include="RenderProperties.cs" />
     <Compile Include="Terminal.cs" />
     <Compile Include="TerminalTst.cs" />
+    <Compile Include="TerminalTstNonLeakingNonWorking.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
