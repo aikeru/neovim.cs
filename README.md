@@ -1,4 +1,13 @@
 # neovim.cs
+
+This is a fork of [Pireax/neovim.cs](https://github.com/Pireax/neovim.cs).
+
+### Why the fork?
+
+This fork fixes the build issue and the memory leak, although performance is pretty painful. This project is in need of a good terminal to render the vims on. I hope to get the changes merged back into Pireax's repo or possibly use something other than .NET Bitmaps which are leaky.
+
+### Original Description
+
 A C# client for talking to [Neovim.](https://github.com/neovim/neovim)
 This also includes a WPF terminal (wip)
 
